@@ -8,7 +8,7 @@ on:
 
 jobs:
   unit-tests:
-    runs-on: default
+    runs-on: macos-latest
 
     steps:
 
