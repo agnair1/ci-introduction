@@ -6,4 +6,10 @@ on:
   push:
     branches: [ main ]
 
-    
+jobs:
+  unit-tests:
+    runs-on: default
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
