@@ -11,9 +11,6 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - name: Show Xcode version
-        run: xcodebuild -version
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -22,3 +19,11 @@ jobs:
 
       - name: Show Xcode version
         run: xcodebuild -version
+
+      - name: Run Unit Tests
+        run: |
+          xcodebuild \
+          -scheme AnyAppTests \
+          -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.4' \
+          -sdk iphonesimulator \
+          clean test | xcpretty --test --color
