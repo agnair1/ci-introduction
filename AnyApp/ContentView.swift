@@ -19,3 +19,10 @@ struct ContentView_Previews: PreviewProvider {
         ContentView()
     }
 }
+
+struct ViewModel {
+    
+    func add(one: Int, two: Int) -> Int {
+        one + two
+    }
+}
