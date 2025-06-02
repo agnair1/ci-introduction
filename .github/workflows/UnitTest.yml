@@ -27,3 +27,10 @@ jobs:
           -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.4' \
           -sdk iphonesimulator \
           clean test | xcpretty --test --color
+
+      - name: Upload test result logs (if needed)
+          if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs
+          path: ~/Library/Logs/DiagnosticReports
