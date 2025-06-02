@@ -35,18 +35,3 @@ jobs:
         with:
           name: test-logs
           path: ~/Library/Logs/DiagnosticReports
-
-      - name: List All Test Functions
-        run: |
-          # Get main result bundle object
-          xcrun xcresulttool get object --path TestResults.xcresult --format json > result.json
-          TEST_REF_ID=$(jq -r '.actions._values[].actionResult.testsRef.id' result.json)
-          echo "TestsRef id: $TEST_REF_ID"
-          xcrun xcresulttool get object --path TestResults.xcresult --id "$TEST_REF_ID" --format json > tests.json
-          echo "----- Listing individual tests -----"
-          jq -r '
-          .summaries._values[].testableSummaries._values[].tests._values[].subtests._values[] 
-          | recurse(.subtests._values[]?) 
-          | select(.testStatus=="Success" or .testStatus=="Failure") 
-          | .identifier
-          ' tests.json
