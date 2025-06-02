@@ -1,0 +1,75 @@
+name: iOS Unit Tests with Code Coverage and Test Function List
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  push:
+    branches: [ main ]
+
+jobs:
+  unit-tests:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Xcode 15.3
+      run: sudo xcode-select -s /Applications/Xcode_15.3.app
+
+    - name: Show Xcode version
+      run: xcodebuild -version
+
+    - name: Install xcpretty
+      run: gem install xcpretty
+
+    - name: Run Unit Tests with Code Coverage
+      run: |
+        xcodebuild \
+          -scheme YourAppScheme \
+          -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.4' \
+          -enableCodeCoverage YES \
+          -sdk iphonesimulator \
+          clean test \
+          -resultBundlePath TestResults.xcresult | xcpretty --test --color
+
+    - name: Generate Code Coverage Report
+      run: |
+        xcrun xccov view --report --json TestResults.xcresult > coverage.json
+        cat coverage.json
+
+    - name: Upload Code Coverage Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: code-coverage-report
+        path: coverage.json
+
+    - name: Extract Test Function List
+      run: |
+        # Get result bundle object as JSON
+        xcrun xcresulttool get object --path TestResults.xcresult --format json > result.json
+
+        # Extract testsRef id
+        TEST_REF_ID=$(jq -r '.actions._values[].actionResult.testsRef.id' result.json)
+        echo "TestsRef id: $TEST_REF_ID"
+
+        # Get test plan summary object
+        xcrun xcresulttool get object --path TestResults.xcresult --id "$TEST_REF_ID" --format json > tests.json
+
+        # List all individual test functions run and save to file
+        jq -r '
+          .summaries._values[].testableSummaries._values[].tests._values[].subtests._values[] 
+          | recurse(.subtests._values[]?) 
+          | select(.testStatus=="Success" or .testStatus=="Failure") 
+          | .identifier
+        ' tests.json > test-function-list.txt
+
+        # Print to logs
+        echo "===== Test Functions Run ====="
+        cat test-function-list.txt
+
+    - name: Upload Test Function List
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-function-list
+        path: test-function-list.txt
